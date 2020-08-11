@@ -9,13 +9,27 @@ function addTodo(text) {
         checked: false,
         id: Date.now(),
         date: d,
+        move: false,
     };
 
     todoItems.push(todo);
     renderTodo(todo);
 }
 
-//rendering todo
+function moveTodo(todo) {
+    const done = {
+        text: todo.text,
+        checked: todo.checked,
+        id: todo.id,
+        date: todo.date,
+        move: todo.move,
+    };
+
+    doneItems.push(done);
+    renderDone(done);
+}
+
+//rendering todo list
 function renderTodo(todo) {
     const list = document.querySelector('#todo-list');
     const item = document.querySelector(`[data-key='${todo.id}']`);
@@ -23,6 +37,10 @@ function renderTodo(todo) {
     if(todo.deleted) {
         item.remove();
         return
+    }
+
+    if(todo.move) {
+        moveTodo(todo);
     }
 
     const isChecked = todo.checked ? 'done':'';
@@ -35,7 +53,7 @@ function renderTodo(todo) {
     node.innerHTML = `
         <div id="${todo.id}">
             <h5>${todo.date}</h5>
-            <span id="${todo.id}" class="ion-ios-checkmark-outline click"></span>
+            <span class="ion-ios-checkmark-outline click"></span>
             <span class="ion-ios-close-outline delete"></span>
             <div class="todo-content">
                 <p>${todo.text}</p>
@@ -45,46 +63,40 @@ function renderTodo(todo) {
 
     //if todo already in list
     if(item) {
-        renderDone(todo);
         list.removeChild(item);
-        //list.replaceChild(node, item);
     }
+
     else {
     //append all created <li> element
     list.append(node);
     }
 }
 
-//rendering done
-function renderDone(todo) {
-    const done = document.querySelector('#done-list');
-    const item = document.querySelector(`[data-key='${todo.id}']`);
-    
-    //console.log(todoItems[0]);
+//render done list
+function renderDone(done) {
+    const doneList = document.querySelector('#done-list');
+    const doneItem = document.querySelector(`[data-key='${done.id}']`);
 
-    if(todo.deleted) {
-        item.remove();
+    if(done.deleted) {
+        doneItem.remove()
         return
     }
-    
-    const isChecked = 'done';
 
-    //create element <li>
     const node = document.createElement("li");
-    node.setAttribute('class', `todo-box ${isChecked}`);
-    node.setAttribute('data-key', todo.id);
+    node.setAttribute('class', `todo-box done`);
+    node.setAttribute('data-key', done.id);
 
     node.innerHTML = `
-        <div id="${todo.id}">
-            <h5>${todo.date}</h5>
+        <div id="${done.id}">
+            <h5>${done.date}</h5>
             <span class="ion-ios-close-outline delete"></span>
             <div class="todo-content">
-                <p>${todo.text}</p>
+                <p>${done.text}</p>
             </div>
         </div>
     `;
 
-    done.append(node);
+    doneList.append(node);
 }
 
 //select the form
@@ -117,12 +129,22 @@ list.addEventListener('click', event => {
         const itemKey = event.target.parentElement.id;
         deleteTodo(itemKey);
     }
-})
+});
+
+//event listener for done list
+const doneList = document.querySelector('#done-list');
+doneList.addEventListener('click', event => {
+    if(event.target.classList.contains('delete')) {
+        const itemKey = event.target.parentElement.id;
+        deleteDone(itemKey);
+    }
+});
 
 //change element checked in array to the opposite
 function toogleDone(key) {
     const index = todoItems.findIndex(item => item.id === Number(key));
     todoItems[index].checked = !todoItems[index].checked;
+    todoItems[index].move = !todoItems[index].move;
     renderTodo(todoItems[index]);
 }
 
@@ -135,4 +157,15 @@ function deleteTodo(key) {
     };
     todoItems = todoItems.filter(item => item.id !== Number(key));
     renderTodo(todo);
+}
+
+//delete done
+function deleteDone(key) {
+    const index = doneItems.findIndex(item => item.id === Number(key));
+    const done = {
+        deleted: true,
+        ...doneItems[index]
+    };
+    doneItems = doneItems.filter(item => item.id !== Number(key));
+    renderDone(done);
 }
